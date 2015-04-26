@@ -19,11 +19,22 @@
     path: "{{jenkins_home}}/updates/default.json"
     owner: "{{jenkins_user}}"
     group: "{{jenkins_group}}"
-    mode: 0755
+    mode: 0644
 
 - name: Install Jenkins plugins.
   command: >
     java -jar {{ jenkins_jar_location }} -s http://{{jenkins_url}}/ install-plugin {{ item }}
     creates={{jenkins_home}}/plugins/{{ item }}.jpi
   with_items: jenkins_plugins_present
+  notify: restart jenkins
+
+# https://wiki.jenkins-ci.org/display/JENKINS/Removing+and+disabling+plugins
+- name: Disable Jenkins plugins
+  copy: # Use copy instead of file state=touch, to prevent needless restarts
+    content: ""
+    dest: "{{jenkins_home}}/plugins/{{item}}.jpi.disabled"
+    owner: "{{jenkins_user}}"
+    group: "{{jenkins_group}}"
+    mode: 0644
+  with_items: jenkins_plugins_disabled
   notify: restart jenkins

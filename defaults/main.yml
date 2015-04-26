@@ -17,3 +17,4 @@ jenkins_plugins_present:
   - git
   - sonar
   - ssh
+jenkins_plugins_disabled: []
