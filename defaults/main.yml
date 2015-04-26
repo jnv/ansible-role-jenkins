@@ -13,7 +13,7 @@ jenkins_connection_delay: 5
 jenkins_connection_retries: 60
 jenkins_jar_location: /opt/jenkins-cli.jar
 jenkins_url: "http://{{jenkins_hostname}}:{{jenkins_http_port}}"
-jenkins_plugins:
+jenkins_plugins_present:
   - git
   - sonar
   - ssh
