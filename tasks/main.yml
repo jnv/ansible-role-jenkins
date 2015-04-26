@@ -13,6 +13,30 @@
     jenkins_repo_key_url: "{{ __jenkins_repo_key_url }}"
   when: jenkins_repo_key_url is not defined
 
+- name: Setup Jenkins user group
+  group:
+    name: "{{jenkins_group}}"
+    system: yes
+    state: present
+
+- name: Setup Jenkins user account
+  user:
+    name: "{{jenkins_user}}"
+    group: "{{jenkins_group}}"
+    groups: "{{jenkins_groups}}"
+    system: yes
+    home: "{{jenkins_home}}"
+    shell: "/bin/bash"
+    state: present
+
+- name: Configure /etc/default/jenkins
+  template:
+    src: default_jenkins.j2
+    dest: /etc/default/jenkins
+    owner: root
+    group: root
+    mode: "u=rwx,g=rx,o=rx"
+
 # Setup/install tasks.
 - include: setup-RedHat.yml
   when: ansible_os_family == 'RedHat'
@@ -25,7 +49,7 @@
   service: name=jenkins state=started enabled=yes
 
 - name: Wait for Jenkins to start up before proceeding.
-  shell: curl --head --silent http://{{ jenkins_hostname }}:8080/cli/
+  shell: curl --head --silent {{jenkins_url}}/cli/
   register: result
   until: result.stdout.find("200 OK") != -1
   retries: "{{ jenkins_connection_retries }}"
@@ -34,7 +58,7 @@
 
 - name: Get the jenkins-cli jarfile from the Jenkins server.
   get_url:
-    url: "http://{{ jenkins_hostname }}:8080/jnlpJars/jenkins-cli.jar"
+    url: "{{jenkins_url}}/jnlpJars/jenkins-cli.jar"
     dest: "{{ jenkins_jar_location }}"
   register: jarfile_get
   until: "'OK' in jarfile_get.msg or 'file already exists' in jarfile_get.msg"
